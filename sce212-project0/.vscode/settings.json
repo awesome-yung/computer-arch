@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "dir_file.h": "c",
+        "utils.h": "c",
+        "string.h": "c",
+        "assert.h": "c"
+    }
+}
