@@ -23,6 +23,7 @@ void init_memory() {
         g_mem_regions[i].mem = malloc(g_mem_regions[i].size);
         memset(g_mem_regions[i].mem, 0, g_mem_regions[i].size);
     }
+    // printf(" mem_nr_regions = %d\n",mem_nr_regions);
 }
 /***************************************************************/
 /*                                                             */

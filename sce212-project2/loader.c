@@ -42,7 +42,9 @@ void load_program(char *program_filename) {
         exit(EXIT_FAILURE);
     }
 
+
     /* Read in the program. */
+
     // 1st: read the size of text section
     if (fgets(buffer, 32 + 2, prog) != NULL) {
         //check text segment size
@@ -54,13 +56,35 @@ void load_program(char *program_filename) {
         exit(EXIT_FAILURE);
     }
 
+
     // 2nd: read the size of data section
     // TODO
+    if (fgets(buffer, 32 + 2, prog) != NULL) {
+        //check text segment size
+        data_size = str_to_int(buffer);
+        // data_size =  data_size;
+    }
 
 
     // 3rd: load the text and data binary to memory
     // TODO
+    for (i = 0; i < text_size; i+=4) {
+        if (fgets(buffer, 32 + 2, prog) != NULL) {
+            load_inst_to_mem(buffer, i);
+        } else {
+            printf("Error occured while loading text segment\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
+    for (i = 0; i < data_size; i+=4) {
+        if (fgets(buffer, 32 + 2, prog) != NULL) {
+            load_data_to_mem(buffer, i);
+        } else {
+            printf("Error occured while loading data segment\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
     fclose(prog);
 

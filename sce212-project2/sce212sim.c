@@ -57,10 +57,12 @@ int main(int argc, char *argv[]) {
 
     int opt;
     extern int optind;
-
+    // printf("=== start ===\n");
     while ((opt=getopt(argc, argv, "m:dn:")) != -1) {
+        // printf("opt = %c\n",opt);
         switch (opt) {
             case 'm':
+                // printf("opt = %s\n",optarg);
                 mem_dump_set = 1;
                 tokens = str_split(optarg,':');
                 start_addr = (int)strtol(*(tokens), NULL, 16);
@@ -103,10 +105,11 @@ int main(int argc, char *argv[]) {
     } else {
         run(i);
         rdump();
-
+        // printf("mem_dump = %d \n",mem_dump_set);
         if (mem_dump_set)
-            mdump(start_addr, end_addr);
-    }
+            // {printf("mem_dump \n");
+            mdump(start_addr, end_addr);}
+    
 
     exit(EXIT_SUCCESS);
 }
