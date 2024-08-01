@@ -127,7 +127,13 @@ void jump(){
     // print_state();
 }
 void stall(){
-
+    pipe_pin.WE = pipe_pin.MEM;
+    pipe_pin.MEM = pipe_pin.EX;
+    pipe_pin.EX = 0;
+    pipe_pin.cycle_num++;
+    g_processor.num_insts++;
+    g_processor.ticks++;
+    print_state();
 }
 
 /***************************************************************/
@@ -304,10 +310,10 @@ void jal_j(struct inst_t inst)
             //     g_processor.regs[rt] = imm << 16;
             //     break;
 
-            case 0b100011: // lw
-                g_processor.regs[rt] = mem_read_32(g_processor.regs[rs] + imm);
-                pipe_pin.is_stall = 1;
-                break;
+            // case 0b100011: // lw
+            //     g_processor.regs[rt] = mem_read_32(g_processor.regs[rs] + imm);
+            //     pipe_pin.is_stall = 1;
+            //     break;
                 
             // case 0b001101: // ori
             //     g_processor.regs[rt] = g_processor.regs[rs] | imm;
@@ -455,9 +461,10 @@ void execute(struct inst_t inst)
             //     g_processor.regs[rt] = imm << 16;
             //     break;
 
-            // case 0b100011: // lw
-            //     g_processor.regs[rt] = mem_read_32(g_processor.regs[rs] + imm);
-            //     break;
+            case 0b100011: // lw
+                g_processor.regs[rt] = mem_read_32(g_processor.regs[rs] + imm);
+                pipe_pin.is_stall = 1;
+                break;
                 
             // case 0b001101: // ori
             //     g_processor.regs[rt] = g_processor.regs[rs] | imm;
@@ -772,6 +779,13 @@ void cycle()
         pipe_pin.is_jump = 0;
         // return;
     }    
+
+    if(pipe_pin.is_stall)
+    {
+        stall();
+        pipe_pin.is_stall = 0;
+        return;
+    }
     
     pipe_update();
 
@@ -792,12 +806,6 @@ void cycle()
         return;
     }
     
-    if(pipe_pin.is_stall)
-    {
-        stall();
-        pipe_pin.is_stall = 0;
-        return;
-    }
 
     // 1. fetch
     if(pipe_pin.is_flush != 1 & g_processor.pc < MEM_TEXT_START + g_processor.input_insts*4)
