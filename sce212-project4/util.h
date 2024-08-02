@@ -38,6 +38,15 @@ extern struct MIPS32_proc_t g_processor;
 void        load_inst_to_mem(const char *buffer, const int index);
 void        load_data_to_mem(const char *buffer, const int index);
 void        load_program(char *program_filename);
+void        print_state();
+void        pipe_update();
+void        flush();
+void        jump();
+void        stall();
+void        init_memory();
+uint32_t    mem_read_32(uint32_t address);
+void        mem_write_32(uint32_t address, uint32_t value);
+
 
 #endif
 

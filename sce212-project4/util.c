@@ -5,6 +5,88 @@
 #include "parse.h"
 #include "util.h"
 
+struct Pipe_pin pipe_pin = {0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
+
+void pipe_update(){
+    // printf("update\n");
+    pipe_pin.WE = pipe_pin.MEM;
+    pipe_pin.MEM = pipe_pin.EX;
+    pipe_pin.EX = pipe_pin.ID;
+    pipe_pin.ID = pipe_pin.IF;
+
+
+    pipe_pin.cycle_num++;
+    g_processor.num_insts++;
+    g_processor.ticks++;
+    g_processor.pc += BYTES_PER_WORD;
+}
+
+void flush(){
+    pipe_pin.WE = pipe_pin.MEM;
+    pipe_pin.MEM = pipe_pin.EX;
+    pipe_pin.IF = 0;
+    pipe_pin.ID = 0;
+    pipe_pin.EX = 0;
+
+    pipe_pin.inst_num++;
+    pipe_pin.cycle_num++;
+
+    print_state();
+    pipe_update();
+}
+
+void jump(){
+    pipe_pin.IF = 0;
+    pipe_update();
+}
+
+void stall(){
+    pipe_pin.WE = pipe_pin.MEM;
+    pipe_pin.MEM = pipe_pin.EX;
+    pipe_pin.EX = 0;
+    pipe_pin.cycle_num++;
+}
+
+void print_state(){
+    printf("Current pipeline PC state :\n");
+    printf("-------------------------------------\n");
+    printf("CYCLE %d:", pipe_pin.cycle_num);
+
+    if (pipe_pin.IF != 0)
+        printf("0x%08x", pipe_pin.IF);
+    else
+        printf("          ");
+
+    printf("|");
+
+    if (pipe_pin.ID != 0)
+        printf("0x%08x", pipe_pin.ID);
+    else
+        printf("          ");
+
+    printf("|");
+
+    if (pipe_pin.EX != 0)
+        printf("0x%08x", pipe_pin.EX);
+    else
+        printf("          ");
+
+    printf("|");
+
+    if (pipe_pin.MEM != 0)
+        printf("0x%08x", pipe_pin.MEM);
+    else
+        printf("          ");
+
+    printf("|");
+
+    if (pipe_pin.WE != 0)
+        printf("0x%08x", pipe_pin.WE);
+    else
+        printf("          ");
+
+    printf("\n\n");
+}
 
 void load_inst_to_mem(const char *buffer, const int index)
 {
@@ -202,3 +284,80 @@ char* dec_to_bin(int n)
     return  p;
 }
 
+struct mem_region_t g_mem_regions[] = {
+    { MEM_TEXT_START, MEM_TEXT_SIZE, NULL },
+    { MEM_DATA_START, MEM_DATA_SIZE, NULL },
+};
+
+#define MEM_NREGIONS (sizeof(g_mem_regions)/sizeof(struct mem_region_t))
+
+/***************************************************************/
+/*                                                             */
+/* Procedure : init_memory                                     */
+/*                                                             */
+/* Purpose   : Allocate and zero memory                        */
+/*                                                             */
+/***************************************************************/
+void init_memory() {
+    int i;
+    int mem_nr_regions = (sizeof(g_mem_regions)/sizeof(struct mem_region_t));
+
+    for (i = 0; i < mem_nr_regions; i++) {
+        g_mem_regions[i].mem = malloc(g_mem_regions[i].size);
+        memset(g_mem_regions[i].mem, 0, g_mem_regions[i].size);
+    }
+    // printf(" mem_nr_regions = %d\n",mem_nr_regions);
+}
+/***************************************************************/
+/*                                                             */
+/* Procedure: mem_read_32                                      */
+/*                                                             */
+/* Purpose: Read a 32-bit word from memory                     */
+/*                                                             */
+/***************************************************************/
+uint32_t mem_read_32(uint32_t address)
+{
+    int i;
+    int mem_nr_regions = (sizeof(g_mem_regions)/sizeof(struct mem_region_t));
+
+    for (i = 0; i < mem_nr_regions; i++) {
+        if (address >= g_mem_regions[i].start &&
+            address < (g_mem_regions[i].start + g_mem_regions[i].size)) {
+            uint32_t offset = address - g_mem_regions[i].start;
+
+            return
+                (g_mem_regions[i].mem[offset+3] << 24) |
+                (g_mem_regions[i].mem[offset+2] << 16) |
+                (g_mem_regions[i].mem[offset+1] <<  8) |
+                (g_mem_regions[i].mem[offset+0] <<  0);
+        }
+    }
+
+    return 0;
+}
+
+/***************************************************************/
+/*                                                             */
+/* Procedure: mem_write_32                                     */
+/*                                                             */
+/* Purpose: Write a 32-bit word to memory                      */
+/*                                                             */
+/***************************************************************/
+void mem_write_32(uint32_t address, uint32_t value)
+{
+    int i;
+    int mem_nr_regions = (sizeof(g_mem_regions)/sizeof(struct mem_region_t));
+
+    for (i = 0; i < mem_nr_regions; i++) {
+        if (address >= g_mem_regions[i].start &&
+            address < (g_mem_regions[i].start + g_mem_regions[i].size)) {
+            uint32_t offset = address - g_mem_regions[i].start;
+
+            g_mem_regions[i].mem[offset+3] = (value >> 24) & 0xFF;
+            g_mem_regions[i].mem[offset+2] = (value >> 16) & 0xFF;
+            g_mem_regions[i].mem[offset+1] = (value >>  8) & 0xFF;
+            g_mem_regions[i].mem[offset+0] = (value >>  0) & 0xFF;
+            return;
+        }
+    }
+}
