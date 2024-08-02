@@ -8,12 +8,10 @@
 struct Pipe_pin pipe_pin = {0, 0, 0, 0, 0, 1, 0, 0, 0, 0};
 
 void pipe_update(){
-    // printf("update\n");
     pipe_pin.WE = pipe_pin.MEM;
     pipe_pin.MEM = pipe_pin.EX;
     pipe_pin.EX = pipe_pin.ID;
     pipe_pin.ID = pipe_pin.IF;
-
 
     pipe_pin.cycle_num++;
     g_processor.num_insts++;
@@ -125,7 +123,6 @@ void load_program(char *program_filename) {
         exit(EXIT_FAILURE);
     }
 
-
     /* Read in the program. */
 
     // 1st: read the size of text section
@@ -139,7 +136,6 @@ void load_program(char *program_filename) {
         exit(EXIT_FAILURE);
     }
 
-
     // 2nd: read the size of data section
     // TODO
     if (fgets(buffer, 32 + 1, prog) != NULL) {
@@ -147,7 +143,6 @@ void load_program(char *program_filename) {
         data_size = str_to_int(buffer);
         // data_size =  data_size;
     }
-
 
     // 3rd: load the text and data binary to memory
     // TODO
@@ -176,31 +171,7 @@ void load_program(char *program_filename) {
 }
 
 
-/// util.c ///
-/***************************************************************/
-/*                                                             */
-/*   MIPS-32 Instruction Level Simulator                       */
-/*                                                             */
-/*   SCE212 Ajou University                                    */
-/*   util.c                                                    */
-/*                                                             */
-/***************************************************************/
 
-/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-/*          DO NOT MODIFY THIS FILE!                            */
-/*          You should only the proc.c file!                    */
-/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-
-// #include "proc.h"
-#include "util.h"
-
-/***************************************************************/
-/*                                                             */
-/* Procedure: str_split                                        */
-/*                                                             */
-/* Purpose: To parse main function argument                    */
-/*                                                             */
-/***************************************************************/
 char** str_split(char *a_str, const char a_delim)
 {
     char** result    = 0;

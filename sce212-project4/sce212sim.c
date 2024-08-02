@@ -19,9 +19,6 @@
 #include <stdint.h>
 #include <getopt.h>
 
-// #include "proc.h"
-// #include "mem.h"
-// #include "loader.h"
 #include "util.h"
 #include "run.h"
 
@@ -65,7 +62,6 @@ int main(int argc, char *argv[]) {
     initialize(argv[argc-1]);
 
     run(i);
-    // rdump();
 
 
     exit(EXIT_SUCCESS);
