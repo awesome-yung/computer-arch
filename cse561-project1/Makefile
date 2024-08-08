@@ -19,10 +19,16 @@ help:
 
 test: $(TARGET) test_0 test_1 
 
+# test_0: $(TARGET)
+# 	@echo "Testing example0"; \
+# 	./$(TARGET) -r 3 -i 3 -w 3 traces/sample_input_gcc | diff -Naur validation/sample_output_gcc - ;\
+# 	if [ $$? -eq 0 ]; then echo "\tTest seems correct\n"; else echo "\tResults not identical, check the diff output\n"; fi
+
 test_0: $(TARGET)
 	@echo "Testing example0"; \
 	./$(TARGET) traces/sample_input_gcc | diff -Naur validation/sample_output_gcc - ;\
 	if [ $$? -eq 0 ]; then echo "\tTest seems correct\n"; else echo "\tResults not identical, check the diff output\n"; fi
+
 
 test_1: $(TARGET)
 	@echo "Testing example1"; \

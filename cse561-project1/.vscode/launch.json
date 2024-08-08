@@ -13,18 +13,18 @@
         "stopAtEntry": false,
         "cwd": "${fileDirname}",
         "externalConsole": false,
-        "MIMode": "gdb",
+        "MIMode": "gdb"
     },
     {
         "name": "TEST_PERL",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${fileDirname}/sce212sim",
+        "program": "${fileDirname}/main",
         "args": ["traces/sample_input_perl"],
         "stopAtEntry": false,
         "cwd": "${fileDirname}",
         "externalConsole": false,
-        "MIMode": "gdb",
+        "MIMode": "gdb"
     },
  
 ]

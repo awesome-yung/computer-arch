@@ -2,22 +2,39 @@
 #include <stdlib.h>
 #include "reg.h"
 
+int ROB_SIZE;
+int IQ_SIZE;
+int WIDTH;
 
 int main(int argc, char *argv[]) {
-	FILE *prog;
-    char buffer[32 + 2];
 
-    printf(argv[argc-1]);
-    printf("\n");
+    char opt;
+    // while ((opt=getopt(argc, argv, "n:")) != -1) {
+    //     // printf("opt = %c\n",opt);
+    //     switch (opt) 
+    //     {
+    //         case 'r':
+    //             ROB_SIZE = 1;
+    //             break;
+    //         case 'i':
+    //             IQ_SIZE = 1;
+    //             break;
+    //         case 'w':
+    //             WIDTH = 1;
+    //             break;
+    //     }
+
+    // }
+
+    // printf("r=%s, i=%s, w=%s\n",ROB_SIZE, IQ_SIZE,WIDTH);
     char* file_name = argv[argc-1];
+    
+    run(file_name);
 
-    prog = fopen(file_name, "r");
-
-
-    // 1st: read the size of text section
-    if (fgets(buffer, 32 + 1, prog) != NULL) {
-        printf("buffer =  %s\n",buffer);
-    }
     print_result();
+
+    // printf("tititi\n\n\n\n");
+    // printf("tg34gae\n\n\n\n");
+
     exit(EXIT_SUCCESS);
 }
