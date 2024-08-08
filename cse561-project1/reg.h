@@ -9,11 +9,12 @@ struct Dst_pos{
 
 struct Dst_list{
     int size;
-    struct Dst_pos list[100];
+    struct Dst_pos list[200];
 };
 
 struct pipe_width{
     uint8_t width;
+    uint8_t iq;
 };
 
 struct Pipeline{

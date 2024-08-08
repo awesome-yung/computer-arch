@@ -5,6 +5,7 @@
 
 #define NUM_INSTRUCTIONS 100
 int DI_pass = 0;
+int bias=0;
 
 struct Inst inst_c[NUM_INSTRUCTIONS];
 struct Pipeline pipe_state[NUM_INSTRUCTIONS];
@@ -73,50 +74,85 @@ void append_dst(int dst, int tim) {
 
 
 //commit
+
+// void CM(int num){
+//     int start = inst_c[num].WB.start + inst_c[num].WB.duration;
+//     int duration;
+//     int bundle_count = num%3;
+//     int last_inst_pos = inst_c[num-1].CM.start + inst_c[num-1].CM.duration -1;
+    
+//     last_inst_pos = (last_inst_pos < 0) ? 0 : last_inst_pos; // max(0, last)
+
+//     // last_inst_pos - start를 하면 duration보다 1 적게 나옴
+
+//     if(last_inst_pos == 0)  // 처음 진입
+//     {
+//         duration = 1;
+//         printf("%d case_(0) %d\n",num,duration);
+//         // printf("case_1, du=%d. la=%d, st=%d\n",duration,last_inst_pos,start);
+//     }
+//     else if(bundle_count != 0 & last_inst_pos != 0) // bundle 안에 있을 때
+//     {
+//         if(start>last_inst_pos)
+//         {
+//             duration = 1;    
+//             printf("%d case_(1-1) %d %d %d\n",num, duration, start, last_inst_pos);
+//         }
+//         else
+//         {
+//             duration = last_inst_pos - start + 1;
+//             printf("%d case_(1-2) %d %d %d\n",num,duration,start,last_inst_pos);
+//         }
+//         // duration = last_inst_pos - start;
+//         // printf("case_2, du=%d. la=%d, st=%d\n",duration,last_inst_pos,start);
+//     }
+//     else  // bundle 벗어날 때
+//     {
+//         if(start>last_inst_pos)
+//         {
+//             duration = 1;    
+//             printf("%d case_(2-1) %d %d %d\n",num,duration,start,last_inst_pos);
+//         }
+//         else
+//         {
+//             duration = last_inst_pos - start + 2;
+//             printf("%d case_(2-2) %d %d %d\n",num,duration,start,last_inst_pos);
+//         }
+//         // printf("case_3, du=%d. la=%d, st=%d\n",duration,last_inst_pos-1,start);
+//     }
+//     // printf("du = %d\n",duration);
+//     inst_c[num].CM.start = start;
+//     inst_c[num].CM.duration = duration;
+
+//     pipe_state[start].CM.width++;
+
+//     // printf("CM s = %d, CM = %d\n",start,duration);
+// }
+
+// commit
 void CM(int num){
     int start = inst_c[num].WB.start + inst_c[num].WB.duration;
-    int duration;
-    int bundle_count = num%3;
-    int last_inst_count = inst_c[num-1].CM.start + inst_c[num-1].CM.duration;
+    int duration = 1;
+    int last_inst_pos = inst_c[num-1].CM.start + inst_c[num-1].CM.duration -1;
+    last_inst_pos = (last_inst_pos < 0) ? 0 : last_inst_pos; // max(0, last)
+    int st = start;
 
-    if(last_inst_count == 0)  // 처음 진입
+    for(int i=0;i<20;i++)
     {
-        duration = 1;
-        // printf("case_1, du=%d. la=%d, st=%d\n",duration,last_inst_count,start);
+        pipe_state[st].CM.width++;
+        if(st>=last_inst_pos & pipe_state[st].CM.width<=3)
+        {
+            // printf("n=%d, la=%d, st=%d, wi=%d t/f=%d\n",num,last_inst_pos,st,pipe_state[st].CM.width,st>=last_inst_pos & pipe_state[st].CM.width<3);
+            break;
+        }
+        st++;
+        duration++;
     }
-    else if(bundle_count != 0 & last_inst_count != 0) // bundle 안에 있을 때
-    {
-        if(start>=last_inst_count-1)
-        {
-            duration = 1;    
-        }
-        else
-        {
-            duration = last_inst_count - start;
-        }
-        // duration = last_inst_count - start;
-        // printf("case_2, du=%d. la=%d, st=%d\n",duration,last_inst_count,start);
-    }
-    else  // bundle 벗어날 때
-    {
-        if(start>=last_inst_count-1)
-        {
-            duration = 1;    
-        }
-        else
-        {
-            duration = last_inst_count - start + 1;
-        }
-        // printf("case_3, du=%d. la=%d, st=%d\n",duration,last_inst_count-1,start);
-    }
-    // printf("du = %d\n",duration);
-    inst_c[num].CM.start = start;
-    inst_c[num].CM.duration = duration;
+
+    inst_c[num].CM.start=start;
+    inst_c[num].CM.duration=duration;
     
-    pipe_state[start].CM.width++;
-
-    // printf("CM s = %d, CM = %d\n",start,duration);
-    // printf("\n");
+    // printf("%d, %d, %d\n",num,start,duration);
 }
 
 // writeback
@@ -153,10 +189,10 @@ void EX(int num){
             break;
     }
     inst_c[num].EX.duration = duration;
-    
+
+    int st = start;
     for(int i=0;i<duration;i++)
     {
-        int st = start;
         pipe_state[st].EX.width++;
         st++;
     }
@@ -186,25 +222,36 @@ void IS(int num){
     int next_point;
 
     inst_c[num].IS.start = start;
-    if(tim != 0)
+    if(tim != 0)  // dependacy가 있을 경우
     {
         duration = tim - start;
+        duration = (duration<0) ? 1 : duration;
         next_point = start + duration;
-        if(pipe_state[next_point].RR.width>=3) // RR 3개 있으면 IS 한번 더
+        for(int i=0;i<7;i++)
         {
+            if(pipe_state[next_point].RR.width<3) 
+            {
+                break;
+            }
             duration++;
+            next_point++;
         }
+        
     }
     else
     {
         duration = 1;
         next_point = start + duration;
-        if(pipe_state[next_point].RR.width>=3) // RR 3개 있으면 IS 한번 더
+        for(int i=0;i<7;i++)
         {
+            if(pipe_state[next_point].RR.width<3) 
+            {
+                break;
+            }
             duration++;
+            next_point++;
         }
     }
-    // printf("tim = %d, du = %d\n",tim,duration);
     
     inst_c[num].IS.duration = duration;
 
@@ -212,9 +259,22 @@ void IS(int num){
     for(int i=0; i<duration;i++)
         {
             pipe_state[st].IS.width++;
-            // printf("/ %d IS ->%d wi=%d\n",num, st,pipe_state[st].IS.width);
+            pipe_state[st].IS.iq++;
+            // printf("IS->(%d, %d) is=%d,iq=%d, RR=%d, dif=%d\n",num, st,pipe_state[st].IS.width,pipe_state[st].IS.iq,pipe_state[st].RR.width,tim - start);
             st++;
         }
+
+    // 마지막 st의 iq는 제외한다.
+    st--;
+    pipe_state[st].IS.iq--;
+
+    // 검증
+    st = start;
+    for(int j=0;j<duration;j++)
+    {
+        printf("IS->(%d, %d) is=%d,iq=%d, RR=%d, dif=%d\n",num, st,pipe_state[st].IS.width,pipe_state[st].IS.iq,pipe_state[st].RR.width,tim - start);
+        st++;
+    }
 
     // if(pipe_state[st].RR.width >= 3)
     // {
@@ -228,12 +288,18 @@ void DI(int num){
     int start = inst_c[num].RN.start + inst_c[num].RN.duration;
     int duration = 1;
     int st = start;
+    int rest_inst = 100 - (num+1);
 
     if(num%3==0)
     {
-        if(pipe_state[start].IS.width >= 15)
+        if(pipe_state[start].IS.iq > 12)
+        // if(pipe_state[start].IS.iq > 12)
         {
             DI_pass = 1;
+            if(pipe_state[start].IS.iq + rest_inst <=15)
+            {
+                DI_pass = 0;
+            }
         }
         else
         {
@@ -265,6 +331,11 @@ void RN(int num){
 
     int start = inst_c[num].DE.start + inst_c[num].DE.duration;
     int duration = 1;
+    if(pipe_state[start].IS.iq>12)
+    {
+        duration++;
+    }
+
     inst_c[num].RN.start = start;
     inst_c[num].RN.duration = duration;
     pipe_state[start].RN.width++;
@@ -276,6 +347,10 @@ void DE(int num){
 
     int start = inst_c[num].FE.start + inst_c[num].FE.duration;
     int duration = 1;
+    if(pipe_state[start].IS.iq>12)
+    {
+        duration++;
+    }
     inst_c[num].DE.start = start;
     inst_c[num].DE.duration = duration;
     pipe_state[start].DE.width++;
@@ -286,8 +361,13 @@ void DE(int num){
 //Fetch
 void FE(int num){
 
-    int start = num/3;
+    int start = num/3 + bias;
     int duration = 1;
+    if(pipe_state[start].IS.iq>12)
+    {
+        start++;
+        bias++;
+    }
     inst_c[num].FE.start = start;
     inst_c[num].FE.duration = duration;
 
