@@ -42,22 +42,8 @@ void initialize(char *program_filename) {
 /*                                                             */
 /***************************************************************/
 int main(int argc, char *argv[]) {
-    int debug_set = 0;
-    char** tokens;
+
     int i = 200;		//for loop
-
-    int num_inst_set = 0;
-    int num_inst = 0;
-
-    int mem_dump_set = 0;
-    int start_addr = 0;
-    int end_addr = 0;
-
-    int opt;
-    extern int optind;
-    char *trace_name;
-    FILE *fp;
-    char line[33];
 
     initialize(argv[argc-1]);
 
