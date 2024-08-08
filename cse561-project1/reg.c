@@ -39,6 +39,7 @@ void append_dst(int dst, int tim) {
 
     if( dst != -1)
     {
+        // printf("wb = %d %d \n",dst,tim);
         if(dst_list.size != 0) 
         {
             for(int i=0;i<dst_list.size;i++)
@@ -137,18 +138,18 @@ void CM(int num){
     last_inst_pos = (last_inst_pos < 0) ? 0 : last_inst_pos; // max(0, last)
     int st = start;
 
-    for(int i=0;i<20;i++)
+    for(int i=0;i<30;i++)
     {
         pipe_state[st].CM.width++;
         if(st>=last_inst_pos & pipe_state[st].CM.width<=3)
         {
-            // printf("n=%d, la=%d, st=%d, wi=%d t/f=%d\n",num,last_inst_pos,st,pipe_state[st].CM.width,st>=last_inst_pos & pipe_state[st].CM.width<3);
             break;
         }
+        printf("n=%d, la=%d, st=%d, wi=%d t/f=%d\n",num,last_inst_pos,st,pipe_state[st].CM.width,st>=last_inst_pos & pipe_state[st].CM.width<3);
         st++;
         duration++;
     }
-
+    
     inst_c[num].CM.start=start;
     inst_c[num].CM.duration=duration;
     
@@ -221,13 +222,17 @@ void IS(int num){
     int tim = find_dst(src1, src2);
     int next_point;
 
+    if(num==32|num==33)
+    {
+        // printf("%d t=%d, s=%d\n",num,tim,start);
+    }
     inst_c[num].IS.start = start;
     if(tim != 0)  // dependacy가 있을 경우
     {
         duration = tim - start;
-        duration = (duration<0) ? 1 : duration;
+        duration = (duration<=0) ? 1 : duration;
         next_point = start + duration;
-        for(int i=0;i<7;i++)
+        for(int i=0;i<10;i++)
         {
             if(pipe_state[next_point].RR.width<3) 
             {
@@ -242,7 +247,7 @@ void IS(int num){
     {
         duration = 1;
         next_point = start + duration;
-        for(int i=0;i<7;i++)
+        for(int i=0;i<10;i++)
         {
             if(pipe_state[next_point].RR.width<3) 
             {
@@ -256,6 +261,7 @@ void IS(int num){
     inst_c[num].IS.duration = duration;
 
     int st = start;
+    // printf("n=%d, d=%d t=%d, s=%d\n",num,duration,tim,st);
     for(int i=0; i<duration;i++)
         {
             pipe_state[st].IS.width++;
@@ -268,21 +274,15 @@ void IS(int num){
     st--;
     pipe_state[st].IS.iq--;
 
-    // 검증
-    st = start;
-    for(int j=0;j<duration;j++)
-    {
-        printf("IS->(%d, %d) is=%d,iq=%d, RR=%d, dif=%d\n",num, st,pipe_state[st].IS.width,pipe_state[st].IS.iq,pipe_state[st].RR.width,tim - start);
-        st++;
-    }
-
-    // if(pipe_state[st].RR.width >= 3)
+    // // 검증
+    // st = start;
+    // for(int j=0;j<duration;j++)
     // {
-    //     pipe_state[st].IS.width++;
+    //     printf("IS->(%d, %d) is=%d,iq=%d, RR=%d, dif=%d\n",num, st,pipe_state[st].IS.width, pipe_state[st].IS.iq, pipe_state[st].RR.width, tim - start);
+    //     st++;
     // }
-    // printf("IS s = %d, IS = %d\n",start,duration);
-}
 
+}
 // dispatch
 void DI(int num){
     int start = inst_c[num].RN.start + inst_c[num].RN.duration;
@@ -290,55 +290,46 @@ void DI(int num){
     int st = start;
     int rest_inst = 100 - (num+1);
 
-    if(num%3==0)
+    for(int i=0;i<10;i++)
     {
-        if(pipe_state[start].IS.iq > 12)
-        // if(pipe_state[start].IS.iq > 12)
+        if((pipe_state[st].DI.width<=3 & pipe_state[st].IS.iq <= 12)|pipe_state[st].IS.iq + rest_inst<=15) 
         {
-            DI_pass = 1;
-            if(pipe_state[start].IS.iq + rest_inst <=15)
-            {
-                DI_pass = 0;
-            }
+            pipe_state[st].DI.width++;
+            break;
         }
-        else
-        {
-            DI_pass = 0;
-        }
-        // printf("\n");
-    }
-    
-    inst_c[num].DI.start = start;
-    if(DI_pass)
-    {
-        duration++;
         st++;
-        inst_c[num].DI.duration = duration;
-        pipe_state[st].DI.width++;
-        // printf("U %d DI ->%d wi=%d\n",num,st, pipe_state[start].IS.width);
+        duration++;
     }
-    else
-    {   
-        inst_c[num].DI.duration = duration;
-        // printf("D %d DI ->%d wi=%d\n",num, st,pipe_state[start].IS.width);
-    }
+
+    inst_c[num].DI.start=start;
+    inst_c[num].DI.duration=duration;
     
-    // printf("DI s = %d, DI = %d\n",start,duration);
+
 }
+
 
 // rename
 void RN(int num){
 
     int start = inst_c[num].DE.start + inst_c[num].DE.duration;
     int duration = 1;
-    if(pipe_state[start].IS.iq>12)
+    int st=start;
+    int rest_inst = 100 - (num+1);
+
+    for(int i=0;i<10;i++)
     {
+        if((pipe_state[st].DI.width<=3 & pipe_state[st].IS.iq <= 12)|pipe_state[st].IS.iq + rest_inst<=15) 
+        {
+            pipe_state[st].RN.width++;
+            break;
+        }
+        st++;
         duration++;
     }
 
+
     inst_c[num].RN.start = start;
     inst_c[num].RN.duration = duration;
-    pipe_state[start].RN.width++;
     // printf("RN s = %d, RN = %d\n",start,duration);
 }
 
@@ -347,13 +338,22 @@ void DE(int num){
 
     int start = inst_c[num].FE.start + inst_c[num].FE.duration;
     int duration = 1;
-    if(pipe_state[start].IS.iq>12)
+    int rest_inst = 100 - (num+1);
+    
+    int st=start;
+    for(int i=0;i<10;i++)
     {
+        if((pipe_state[st].DI.width<=3 & pipe_state[st].IS.iq <= 12)|pipe_state[st].IS.iq + rest_inst<=15) 
+        {
+            pipe_state[st].DE.width++;
+            break;
+        }
+        st++;
         duration++;
     }
     inst_c[num].DE.start = start;
     inst_c[num].DE.duration = duration;
-    pipe_state[start].DE.width++;
+
     // printf("DE s = %d, DE = %d\n",start,duration);
 
 }
@@ -363,8 +363,15 @@ void FE(int num){
 
     int start = num/3 + bias;
     int duration = 1;
-    if(pipe_state[start].IS.iq>12)
+    int rest_inst = 100 - (num+1);
+
+    for(int i=0;i<10;i++)
     {
+        if((pipe_state[start].DI.width<=3 & pipe_state[start].IS.iq <= 12)|pipe_state[start].IS.iq + rest_inst<=15) 
+        {
+            pipe_state[start].FE.width++;
+            break;
+        }
         start++;
         bias++;
     }
