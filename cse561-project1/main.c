@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     
     run(file_name);
 
-    print_result();
+    print_result(file_name);
 
     // printf("tititi\n\n\n\n");
     // printf("tg34gae\n\n\n\n");

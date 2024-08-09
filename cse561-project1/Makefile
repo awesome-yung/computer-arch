@@ -32,7 +32,7 @@ test_0: $(TARGET)
 
 test_1: $(TARGET)
 	@echo "Testing example1"; \
-	./$(TARGET) -m 0x10000000:0x10000010 -n 50 sample_input/example1.o | diff -Naur sample_output/example1 - ;\
+	./$(TARGET) traces/sample_input_perl | diff -Naur validation/sample_output_perl - ;\
 	if [ $$? -eq 0 ]; then echo "\tTest seems correct\n"; else echo "\tResults not identical, check the diff output\n"; fi
 
 

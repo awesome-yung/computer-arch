@@ -145,7 +145,7 @@ void CM(int num){
         {
             break;
         }
-        printf("n=%d, la=%d, st=%d, wi=%d t/f=%d\n",num,last_inst_pos,st,pipe_state[st].CM.width,st>=last_inst_pos & pipe_state[st].CM.width<3);
+        // printf("n=%d, la=%d, st=%d, wi=%d t/f=%d\n",num,last_inst_pos,st,pipe_state[st].CM.width,st>=last_inst_pos & pipe_state[st].CM.width<3);
         st++;
         duration++;
     }
@@ -288,11 +288,17 @@ void DI(int num){
     int start = inst_c[num].RN.start + inst_c[num].RN.duration;
     int duration = 1;
     int st = start;
-    int rest_inst = 100 - (num+1);
+    int rest_inst = 100 - (num);
 
     for(int i=0;i<10;i++)
     {
-        if((pipe_state[st].DI.width<=3 & pipe_state[st].IS.iq <= 12)|pipe_state[st].IS.iq + rest_inst<=15) 
+        // if(pipe_state[st].DI.width<=3 & (pipe_state[st].IS.iq <= 12 | pipe_state[st].IS.iq + rest_inst<=15))
+        if((pipe_state[st].DI.width<=3) & pipe_state[st].IS.iq <= 12)
+        {
+            pipe_state[st].DI.width++;
+            break;
+        }
+        else if(pipe_state[st].IS.iq + rest_inst <= 15)
         {
             pipe_state[st].DI.width++;
             break;
@@ -303,7 +309,6 @@ void DI(int num){
 
     inst_c[num].DI.start=start;
     inst_c[num].DI.duration=duration;
-    
 
 }
 
@@ -314,11 +319,12 @@ void RN(int num){
     int start = inst_c[num].DE.start + inst_c[num].DE.duration;
     int duration = 1;
     int st=start;
-    int rest_inst = 100 - (num+1);
+    int rest_inst = 100 - (num);
 
     for(int i=0;i<10;i++)
     {
-        if((pipe_state[st].DI.width<=3 & pipe_state[st].IS.iq <= 12)|pipe_state[st].IS.iq + rest_inst<=15) 
+        // if(pipe_state[st].DI.width<=3 & (pipe_state[st].IS.iq <= 12 | pipe_state[st].IS.iq + rest_inst<=15))
+        if(pipe_state[st].DI.width<=3 & pipe_state[st].IS.iq <= 12)
         {
             pipe_state[st].RN.width++;
             break;
@@ -338,12 +344,13 @@ void DE(int num){
 
     int start = inst_c[num].FE.start + inst_c[num].FE.duration;
     int duration = 1;
-    int rest_inst = 100 - (num+1);
+    int rest_inst = 100 - (num);
     
     int st=start;
     for(int i=0;i<10;i++)
     {
-        if((pipe_state[st].DI.width<=3 & pipe_state[st].IS.iq <= 12)|pipe_state[st].IS.iq + rest_inst<=15) 
+        // if(pipe_state[st].DI.width<=3 & (pipe_state[st].IS.iq <= 12 | pipe_state[st].IS.iq + rest_inst<=15))
+        if(pipe_state[st].DI.width<=3 & pipe_state[st].IS.iq <= 12)
         {
             pipe_state[st].DE.width++;
             break;
@@ -363,19 +370,21 @@ void FE(int num){
 
     int start = num/3 + bias;
     int duration = 1;
-    int rest_inst = 100 - (num+1);
+    int rest_inst = 100 - (num);
+    int st = start;
 
     for(int i=0;i<10;i++)
     {
-        if((pipe_state[start].DI.width<=3 & pipe_state[start].IS.iq <= 12)|pipe_state[start].IS.iq + rest_inst<=15) 
+        // if(pipe_state[start].DI.width<=3 & (pipe_state[start].IS.iq <= 12 | pipe_state[start].IS.iq + rest_inst<=15))
+        if(pipe_state[st].DI.width<=3 & pipe_state[st].IS.iq <= 12)
         {
-            pipe_state[start].FE.width++;
+            pipe_state[st].FE.width++;
             break;
         }
-        start++;
+        st++;
         bias++;
     }
-    inst_c[num].FE.start = start;
+    inst_c[num].FE.start = st;
     inst_c[num].FE.duration = duration;
 
     pipe_state[start].FE.width++;
@@ -417,27 +426,27 @@ void run(char* file_name){
 
 
 
-void print_result(){
+void print_result(char* file_name){
     
     for(int i=0; i<NUM_INSTRUCTIONS; i++)
     {
         printf("%d fu{%d} src{%d,%d} dst{%d} FE{%d,%d} DE{%d,%d} RN{%d,%d} DI{%d,%d} IS{%d,%d} RR{%d,%d} EX{%d,%d} WB{%d,%d} CM{%d,%d}",
-        i,inst_c[i].fu, inst_c[i].src_1, inst_c[i].src_2, inst_c[i].dst,
-        inst_c[i].FE.start, inst_c[i].FE.duration,
-        inst_c[i].DE.start, inst_c[i].DE.duration,
-        inst_c[i].RN.start, inst_c[i].RN.duration,
-        inst_c[i].DI.start, inst_c[i].DI.duration,
-        inst_c[i].IS.start, inst_c[i].IS.duration,
-        inst_c[i].RR.start, inst_c[i].RR.duration,
-        inst_c[i].EX.start, inst_c[i].EX.duration,
-        inst_c[i].WB.start, inst_c[i].WB.duration,
-        inst_c[i].CM.start, inst_c[i].CM.duration);
+                i,inst_c[i].fu, inst_c[i].src_1, inst_c[i].src_2, inst_c[i].dst,
+                inst_c[i].FE.start, inst_c[i].FE.duration,
+                inst_c[i].DE.start, inst_c[i].DE.duration,
+                inst_c[i].RN.start, inst_c[i].RN.duration,
+                inst_c[i].DI.start, inst_c[i].DI.duration,
+                inst_c[i].IS.start, inst_c[i].IS.duration,
+                inst_c[i].RR.start, inst_c[i].RR.duration,
+                inst_c[i].EX.start, inst_c[i].EX.duration,
+                inst_c[i].WB.start, inst_c[i].WB.duration,
+                inst_c[i].CM.start, inst_c[i].CM.duration);
         printf("\n");
     }
     int cycle = inst_c[99].CM.start+inst_c[99].CM.duration-1;
     float ipc = (float)NUM_INSTRUCTIONS / cycle;
     printf("# === Simulator Command =========\n");
-    printf("# ./cse561sim 60 15 3 traces/sample_input_gcc\n");
+    printf("# ./cse561sim 60 15 3 %s \n",file_name);
     printf("# === Processor Configuration ===\n");
     printf("# ROB_SIZE = %d\n",60);
     printf("# IQ_SIZE  = %d\n",15);
